@@ -1,41 +1,91 @@
 #include <iostream>
-#include <locale>
 #include <cmath>
+#include <iomanip>
+#include <locale>
+
 using namespace std;
 
+void task1() {
+    double fact1 = 27.0 / 31.0;
+    double fact2 = sqrt(42.0);
+    double around1 = 0.871;
+    double around2 = 6.48;
+
+
+    double absError1 = fabs(around1 - fact1);
+    double absError2 = fabs(around2 - fact2);
+    double relError1 = (absError1 / fact1) * 100;
+    double relError2 = (absError2 / fact2) * 100;
+
+    cout << "а) Сравнение точности равенств:" << endl;
+    cout << "1. 27/31 = 0.871:" << endl;
+    cout << "   Абсолютная погрешность: " << absError1 << endl;
+    cout << "   Относительная погрешность: " << fixed << setprecision(4) << relError1 << "%" << endl;
+
+    cout << "2. Корень из 42 = 6.48:" << endl;
+    cout << "   Абсолютная погрешность: " << absError2 << endl;
+    cout << "   Относительная погрешность: " << fixed << setprecision(4) << relError2 << "%" << endl;
+
+    if (relError1 < relError2) {
+        cout << "Вывод: Первое равенство точнее." << endl;
+    }
+    else {
+        cout << "Вывод: Второе равенство точнее." << endl;
+    }
+    cout << endl;
+}
+
+// Функция для округления числа с учетом погрешности
+void task2() {
+    double num = 0.088748;
+    double relError = 0.56; // в процентах
+
+    cout << "б) Округление числа с учетом погрешности:" << endl;
+    cout << "Исходное число: " << fixed << setprecision(6) << num << endl;
+    cout << "Относительная погрешность: " << relError << "%" << endl;
+
+    // Вычисляем абсолютную погрешность
+    double absError = (relError / 100) * num;
+    cout << "Абсолютная погрешность: " << absError << endl;
+
+    // Определяем количество верных знаков после запятой
+    int decimalPlaces = 0;
+    double temp = absError;
+    while (temp < 1.0) {
+        temp *= 10;
+        decimalPlaces++;
+    }
+    decimalPlaces--; // корректировка
+
+    // Округляем число
+    double rounded = round(num * pow(10, decimalPlaces)) / pow(10, decimalPlaces);
+
+    cout << "Число верных знаков после запятой: " << decimalPlaces << endl;
+    cout << "Округленное число: " << fixed << setprecision(decimalPlaces) << rounded << endl;
+    cout << endl;
+}
+
+// Функция для вычисления предельных погрешностей
+void task3() {
+    double num = 71.385;
+
+    cout << "в) Предельные погрешности для числа " << fixed << setprecision(3) << num << ":" << endl;
+
+    // По умолчанию все цифры верные -> абсолютная погрешность 0.5 единицы последнего разряда
+    double absError = 0.0005; // для числа 71.385 последний разряд - тысячные
+
+    // Относительная погрешность
+    double relError = (absError / num) * 100;
+
+    cout << "Предельная абсолютная погрешность: ±" << absError << endl;
+    cout << "Предельная относительная погрешность: " << setprecision(4) << relError << "%" << endl;
+}
+
 int main() {
-	setlocale(LC_ALL, "RUS");
+    setlocale(LC_ALL, "RUS");
+    task1();
+    task2();
+    task3();
 
-	double chisl, znam, sq, ans1, ans2;
-	cout << "Введите числитель:\n";
-	scanf_s("%lg", &chisl); // 27
-	cout << "Введите знаменатель:\n";
-	scanf_s("%lg", &znam); // 31
-	printf("Частное от деления %lg на %lg даёт %lg\n", chisl, znam, chisl / znam);
-
-	cout << "Введите число, из которого нужно извлечь корень:\n";
-	scanf_s("%lg", &sq); // 42
-	printf("Корень из %lg равен %lg\n", sq, sqrt(sq));
-
-	cout << "Введите первый полувичшийся Вами ответ:\n";
-	scanf_s("%lf", &ans1); // 0.871
-	cout << "Введите второй полувичшийся Вами ответ:\n";
-	scanf_s("%lf", &ans2); // 6.48
-	double temp = chisl / znam;
-	printf("Разница в первом: %lf\nРазница во втором: %lf\n", abs(ans1 - temp), abs(ans2 - sqrt(sq)));
-
-	if (abs(ans1 - temp) < abs(ans2 - sqrt(sq))) printf("*** Первое число точнее второго ***\n\n");
-	else printf("*** Второе число точнее первого ***\n\n");
-
-	double inter, proz, ans3, round;
-	cout << "Введите число:\n";
-	scanf_s("%lg", &inter); // 0.088748
-	cout << "Введите относительную погрешность (в процентах):\n";
-	scanf_s("%lg", &proz); // 0.56
-
-	proz /= 100;
-	ans3 = abs(inter - proz);
-
-	printf("Абсолютная погрешность результата равна: %lf\n", inter * ans3);
-
+    return 0;
 }
