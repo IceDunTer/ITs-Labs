@@ -5,26 +5,35 @@
 
 using namespace std;
 
-double cube(double a, double epsilon = 1e-6) {
-    double x = a / 3.0;
-    double x_next;
+double findMinValue(int n) {
+    cout << "k \t|\t k^3 \t| sin(n + k/n) \t| Значение" << endl;
+    cout << "---------------------------------" << endl;
 
-    do {
-        x_next = x;
-        x = (2.0 / 3.0) * (x + a / (2.0 * x * x));
-    } while (abs(x - x_next) >= epsilon);
+    double min_val = pow(1, 3) * sin(n + static_cast<double>(1) / n);
+    cout << fixed << setprecision(6);
+    cout << 1 << " \t|\t " << setw(4) << 1 << " \t| " << setw(12) << sin(n + 1.0 / n) << " \t| " << min_val << endl;
 
-    return x;
+    for (int k = 2; k <= n; ++k) {
+        double sin_val = sin(n + static_cast<double>(k) / n);
+        double term = pow(k, 3) * sin_val;
+        cout << k << " \t| " << setw(4) << pow(k, 3) << " \t| " << setw(12) << sin_val << " \t| " << term << endl;
+        if (term < min_val) {
+            min_val = term;
+        }
+    }
+
+    return min_val;
 }
 
 int main() {
     setlocale(LC_ALL, "RUS");
-    double a;
-    cout << "Введите число a: ";
-    cin >> a;
+    int n;
+    cout << "Введите натуральное число n: ";
+    cin >> n;
 
-    double result = cube(a);
-    cout << "Кубический корень из " << a << " приближенно равен " << fixed << setprecision(6) << result << endl;
+    double result = findMinValue(n);
+    cout << "---------------------------------" << endl;
+    cout << "Наименьшее значение: " << result << endl;
 
     return 0;
 }
