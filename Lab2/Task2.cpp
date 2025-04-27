@@ -1,33 +1,59 @@
 #include <iostream>
 #include <cmath>
-#include <vector>
+#include <iomanip>
 #include <locale>
 
 using namespace std;
 
-double calculateSum(int n) {
-    if (n == 0) return 0;
+void checkFirstLimit(double epsilon) {
+    cout << "\n--- Проверка первого замечательного предела ---\n";
+    cout << "lim(sin(x)/x) при x->0 = 1\n\n";
 
-    vector<double> a(n + 1, 1.0), b(n + 1, 1.0);
-    double sum = a[1] * b[1];
+    double x = 1.0;
+    int step = 1;
+    double diff;
 
-    for (int k = 2; k <= n; ++k) {
-        a[k] = 0.5 * (sqrt(b[k - 1] + 0.5) * a[k - 1]);
-        b[k] = 2 * pow(a[k - 1], 2) + b[k - 1];
-        sum += a[k] * b[k];
-    }
+    cout << "Шаг |      x      |  sin(x)/x  |  Разница  " << endl;
+    cout << "------------------------------------------" << endl;
 
-    return sum;
+    do {
+        double ratio = sin(x) / x;
+        diff = abs(ratio - 1.0);
+        cout << setw(3) << step++ << " | " << scientific << setw(11) << x
+            << " | " << fixed << setw(9) << ratio << " | " << diff << endl;
+        x /= 2.0;
+    } while (diff >= epsilon);
+}
+
+void checkSecondLimit(double epsilon) {
+    cout << "\n--- Проверка второго замечательного предела ---\n";
+    cout << "lim(1+1/n)^n при n->∞ = e\n\n";
+
+    int n = 1;
+    int step = 1;
+    double e = exp(1.0);
+    double diff;
+
+    cout << "Шаг |    (1+1/n)^n    |  Разница  " << endl;
+    cout << "------------------------------------------" << endl;
+
+    do {
+        double term = pow(1.0 + 1.0 / n, n);
+        diff = abs(term - e);
+        cout << setw(3) << step++
+            << " | " << setw(15) << term << " | " << diff << endl;
+        n++;
+    } while (diff >= epsilon);
 }
 
 int main() {
     setlocale(LC_ALL, "RUS");
-    int n;
-    cout << "Введите натуральное число n: ";
-    cin >> n;
+    double epsilon;
+    cout << "Введите точность epsilon: ";
+    cin >> epsilon;
 
-    double result = calculateSum(n);
-    cout << "Сумма: " << result << endl;
+    checkFirstLimit(epsilon);
+    checkSecondLimit(epsilon);
 
     return 0;
 }
