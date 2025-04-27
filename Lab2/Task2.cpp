@@ -1,28 +1,23 @@
 #include <iostream>
 #include <cmath>
-#include <iomanip>
+#include <vector>
 #include <locale>
 
 using namespace std;
 
-double findMinValue(int n) {
-    cout << "k \t|\t k^3 \t| sin(n + k/n) \t| Значение" << endl;
-    cout << "---------------------------------" << endl;
+double calculateSum(int n) {
+    if (n == 0) return 0;
 
-    double min_val = pow(1, 3) * sin(n + static_cast<double>(1) / n);
-    cout << fixed << setprecision(6);
-    cout << 1 << " \t|\t " << setw(4) << 1 << " \t| " << setw(12) << sin(n + 1.0 / n) << " \t| " << min_val << endl;
+    vector<double> a(n + 1, 1.0), b(n + 1, 1.0);
+    double sum = a[1] * b[1];
 
     for (int k = 2; k <= n; ++k) {
-        double sin_val = sin(n + static_cast<double>(k) / n);
-        double term = pow(k, 3) * sin_val;
-        cout << k << " \t| " << setw(4) << pow(k, 3) << " \t| " << setw(12) << sin_val << " \t| " << term << endl;
-        if (term < min_val) {
-            min_val = term;
-        }
+        a[k] = 0.5 * (sqrt(b[k - 1] + 0.5) * a[k - 1]);
+        b[k] = 2 * pow(a[k - 1], 2) + b[k - 1];
+        sum += a[k] * b[k];
     }
 
-    return min_val;
+    return sum;
 }
 
 int main() {
@@ -31,9 +26,8 @@ int main() {
     cout << "Введите натуральное число n: ";
     cin >> n;
 
-    double result = findMinValue(n);
-    cout << "---------------------------------" << endl;
-    cout << "Наименьшее значение: " << result << endl;
+    double result = calculateSum(n);
+    cout << "Сумма: " << result << endl;
 
     return 0;
 }
