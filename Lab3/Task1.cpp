@@ -73,11 +73,13 @@ Result newton(double x0) {
     double root = x0;
     double prev;
 
-    do {
+    prev = root;
+    while (fabs(root - prev) > EPS) {
         prev = root;
         root = prev - f(prev) / df(prev);
         iterations++;
-    } while (fabs(root - prev) > EPS);
+    }
+        
 
     auto stop = high_resolution_clock::now();
     return { "Ньютона", root, f(root), iterations,
@@ -143,8 +145,14 @@ void print_result(const Result& r) {
 
 int main() {
     setlocale(LC_ALL, "RUS");
-    const double a = 1.0, b = 2.0;
+    double a, b;
     int choice;
+
+    cout << "Введите начальную точку интервала: ";
+    cin >> a;
+    cout << "Введите конечную точку интервала: ";
+    cin >> b;
+
 
     cout << "Введите желаемую точность (например, 0.000001): ";
     cin >> EPS;
@@ -211,7 +219,7 @@ int main() {
         default:
             cout << "Неверный выбор! Попробуйте снова.\n";
         }
-    } while (choice != 0);
+    } while (choice);
 
     return 0;
 }
