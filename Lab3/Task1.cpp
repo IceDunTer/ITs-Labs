@@ -2,15 +2,9 @@
 #include <cmath>
 #include <iomanip>
 #include <vector>
-#include <algorithm>
-#include <chrono>
-#include <locale>
-
 using namespace std;
-using namespace std::chrono;
 
-double EPS; // Теперь точность задается пользователем
-
+// Функция и ее производные
 double f(double x) {
     return cos(x) + x - 2;
 }
@@ -19,226 +13,124 @@ double df(double x) {
     return -sin(x) + 1;
 }
 
-struct Result {
-    string method;
-    double root;
-    double func_value;
-    int iters;
-    long long ms;
-};
+double d2f(double x) {
+    return -cos(x);
+}
 
-Result division(double a, double b) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root;
+// Метод дихотомии (бисекции)
+double bisection(double a, double b, double eps, int& iter) {
+    iter = 0;
+    double c, fa = f(a), fb = f(b);
 
-    while (fabs(b - a) > EPS) {
-        root = (a + b) / 2;
-        iterations++;
-
-        if (f(a) * f(root) < 0)
-            b = root;
-        else
-            a = root;
+    // Если на границах одинаковые знаки, расширяем интервал
+    while (fa * fb > 0) {
+        a -= 1.0;
+        b += 1.0;
+        fa = f(a);
+        fb = f(b);
     }
 
-    auto stop = high_resolution_clock::now();
-    return { "Деление", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
+    while (fabs(b - a) > eps) {
+        c = (a + b) / 2;
+        iter++;
+
+        if (f(c) == 0.0) break;
+        if (f(a) * f(c) < 0) b = c;
+        else a = c;
+    }
+    return (a + b) / 2;
 }
 
-Result chord(double a, double b) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root;
+// Метод Ньютона
+double newton(double x0, double eps, int& iter) {
+    iter = 0;
+    double x = x0, delta;
 
     do {
-        root = a - f(a) * (b - a) / (f(b) - f(a));
-        iterations++;
+        delta = f(x) / df(x);
+        x -= delta;
+        iter++;
+    } while (fabs(delta) > eps && iter < 1000);
 
-        if (f(a) * f(root) < 0)
-            b = root;
-        else
-            a = root;
-    } while (fabs(f(root)) > EPS);
-
-    auto stop = high_resolution_clock::now();
-    return { "Хорд", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
+    return x;
 }
 
-Result newton(double x0) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root = x0;
-    double prev;
+// Метод секущих
+double secant(double x0, double x1, double eps, int& iter) {
+    iter = 0;
+    double x2;
 
     do {
-        prev = root;
-        root = prev - f(prev) / df(prev);
-        iterations++;
-    } while (fabs(root - prev) > EPS);
-
-    auto stop = high_resolution_clock::now();
-    return { "Ньютона", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
-}
-
-Result secant(double x0, double x1) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root;
-
-    do {
-        root = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0));
+        x2 = x1 - f(x1) * (x1 - x0) / (f(x1) - f(x0));
         x0 = x1;
-        x1 = root;
-        iterations++;
-    } while (fabs(f(root)) > EPS);
+        x1 = x2;
+        iter++;
+    } while (fabs(f(x1)) > eps && iter < 1000);
 
-    auto stop = high_resolution_clock::now();
-    return { "Секущих", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
+    return x1;
 }
 
-Result combined(double a, double b) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root;
+// Метод простых итераций
+double simple_iteration(double x0, double eps, int& iter) {
+    iter = 0;
+    double x = x0, prev_x;
 
     do {
-        double chord_val = a - f(a) * (b - a) / (f(b) - f(a));
-        double newton_val = b - f(b) / df(b);
+        prev_x = x;
+        x = 2 - cos(x);  // x = g(x)
+        iter++;
+    } while (fabs(x - prev_x) > eps && iter < 1000);
 
-        a = chord_val;
-        b = newton_val;
-        root = (a + b) / 2;
-        iterations++;
-    } while (fabs(b - a) > EPS);
-
-    auto stop = high_resolution_clock::now();
-    return { "Комбинированный", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
-}
-
-Result simpleIteration(double x0) {
-    auto start = high_resolution_clock::now();
-    int iterations = 0;
-    double root = x0;
-    double prev;
-
-    do {
-        prev = root;
-        root = cos(root) + 2; // Пример итерационной функции
-        iterations++;
-    } while (fabs(root - prev) > EPS);
-
-    auto stop = high_resolution_clock::now();
-    return { "Простых итераций", root, f(root), iterations,
-            duration_cast<microseconds>(stop - start).count() };
-}
-
-void print_menu() {
-    cout << "\nВыберите метод решения:\n";
-    cout << "1. Метод деления пополам\n";
-    cout << "2. Метод хорд\n";
-    cout << "3. Метод Ньютона\n";
-    cout << "4. Метод секущих\n";
-    cout << "5. Комбинированный метод\n";
-    cout << "6. Метод простых итераций\n";
-    cout << "7. Все методы (сравнение)\n";
-    cout << "0. Выход\n";
-    cout << "Ваш выбор: ";
-}
-
-void print_result(const Result& r) {
-    cout << "\nРезультаты метода " << r.method << ":\n";
-    cout << "Корень: " << fixed << setprecision(10) << r.root << endl;
-    cout << "Значение f(x): " << scientific << setprecision(2) << r.func_value << endl;
-    cout << "Количество итераций: " << r.iters << endl;
-    cout << "Время выполнения: " << r.ms << " мкс\n";
+    return x;
 }
 
 int main() {
-    setlocale(LC_ALL, "RUS");
-    double a, b;
-    int choice;
+    setlocale(LC_ALL, "Russian");
 
-    cout << "Введите начальную точку интервала: ";
-    cin >> a;
-    cout << "Введите конечную точку интервала: ";
-    cin >> b;
+    double eps, a, b;
+    int iter;
 
-    cout << "Введите желаемую точность (например, 0.000001): ";
-    cin >> EPS;
+    cout << "Решение уравнения cos(x) + x - 2 = 0\n";
+    cout << "Введите точность: ";
+    cin >> eps;
 
-    do {
-        print_menu();
-        cin >> choice;
+    // Автоматический поиск начального приближения
+    a = -10; b = 10;
+    while (f(a) * f(b) > 0) {
+        a *= 1.5;
+        b *= 1.5;
+    }
 
-        if (choice == 0) break;
+    cout << "\nРезультаты разными методами:\n";
+    cout << fixed << setprecision(10);
 
-        switch (choice) {
-        case 1:
-            print_result(division(a, b));
-            break;
-        case 2:
-            print_result(chord(a, b));
-            break;
-        case 3:
-            print_result(newton((a + b) / 2));
-            break;
-        case 4:
-            print_result(secant(a, b));
-            break;
-        case 5:
-            print_result(combined(a, b));
-            break;
-        case 6:
-            print_result(simpleIteration((a + b) / 2));
-            break;
-        case 7: {
-            vector<Result> results = {
-                division(a, b),
-                chord(a, b),
-                newton((a + b) / 2),
-                secant(a, b),
-                combined(a, b),
-                simpleIteration((a + b) / 2)
-            };
+    // Метод бисекции
+    double root_bisect = bisection(a, b, eps, iter);
+    cout << "1. Метод бисекции:\n";
+    cout << "   Корень: " << root_bisect << endl;
+    cout << "   f(x) = " << f(root_bisect) << endl;
+    cout << "   Итераций: " << iter << endl << endl;
 
-            sort(results.begin(), results.end(),
-                [](const Result& r1, const Result& r2) {
-                    return r1.ms < r2.ms;
-                });
+    // Метод Ньютона
+    double root_newton = newton((a + b) / 2, eps, iter);
+    cout << "2. Метод Ньютона:\n";
+    cout << "   Корень: " << root_newton << endl;
+    cout << "   f(x) = " << f(root_newton) << endl;
+    cout << "   Итераций: " << iter << endl << endl;
 
-            cout << "\nСравнение всех методов (точность " << EPS << "):\n";
-            cout << "|      Метод       |     Корень       |  Значение f(x)   | Итерации   | Время (мкс)  |\n";
+    // Метод секущих
+    double root_secant = secant(a, b, eps, iter);
+    cout << "3. Метод секущих:\n";
+    cout << "   Корень: " << root_secant << endl;
+    cout << "   f(x) = " << f(root_secant) << endl;
+    cout << "   Итераций: " << iter << endl << endl;
 
-            for (const auto& r : results) {
-                cout << "| " << setw(17) << left << r.method << " | "
-                    << setw(16) << fixed << setprecision(10) << r.root << " | "
-                    << setw(16) << scientific << setprecision(2) << r.func_value << " | "
-                    << setw(10) << r.iters << " | "
-                    << setw(12) << r.ms << " |\n";
-            }
-
-            cout << "\nАнализ результатов:\n";
-            cout << "1. Самый быстрый метод: " << results[0].method
-                << " (" << results[0].ms << " мкс)\n";
-            cout << "2. Наиболее эффективный по итерациям: ";
-
-            auto min_iter = min_element(results.begin(), results.end(),
-                [](const Result& r1, const Result& r2) {
-                    return r1.iters < r2.iters;
-                });
-            cout << min_iter->method << " (" << min_iter->iters << " итераций)\n";
-            break;
-        }
-        default:
-            cout << "Неверный выбор! Попробуйте снова.\n";
-        }
-    } while (choice);
+    // Метод простых итераций
+    double root_simple = simple_iteration((a + b) / 2, eps, iter);
+    cout << "4. Метод простых итераций:\n";
+    cout << "   Корень: " << root_simple << endl;
+    cout << "   f(x) = " << f(root_simple) << endl;
+    cout << "   Итераций: " << iter << endl;
 
     return 0;
 }
