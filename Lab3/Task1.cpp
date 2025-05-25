@@ -73,13 +73,11 @@ Result newton(double x0) {
     double root = x0;
     double prev;
 
-    prev = root;
-    while (fabs(root - prev) > EPS) {
+    do {
         prev = root;
         root = prev - f(prev) / df(prev);
         iterations++;
-    }
-        
+    } while (fabs(root - prev) > EPS);
 
     auto stop = high_resolution_clock::now();
     return { "Ньютона", root, f(root), iterations,
@@ -123,6 +121,23 @@ Result combined(double a, double b) {
             duration_cast<microseconds>(stop - start).count() };
 }
 
+Result simpleIteration(double x0) {
+    auto start = high_resolution_clock::now();
+    int iterations = 0;
+    double root = x0;
+    double prev;
+
+    do {
+        prev = root;
+        root = cos(root) + 2; // Пример итерационной функции
+        iterations++;
+    } while (fabs(root - prev) > EPS);
+
+    auto stop = high_resolution_clock::now();
+    return { "Простых итераций", root, f(root), iterations,
+            duration_cast<microseconds>(stop - start).count() };
+}
+
 void print_menu() {
     cout << "\nВыберите метод решения:\n";
     cout << "1. Метод деления пополам\n";
@@ -130,7 +145,8 @@ void print_menu() {
     cout << "3. Метод Ньютона\n";
     cout << "4. Метод секущих\n";
     cout << "5. Комбинированный метод\n";
-    cout << "6. Все методы (сравнение)\n";
+    cout << "6. Метод простых итераций\n";
+    cout << "7. Все методы (сравнение)\n";
     cout << "0. Выход\n";
     cout << "Ваш выбор: ";
 }
@@ -152,7 +168,6 @@ int main() {
     cin >> a;
     cout << "Введите конечную точку интервала: ";
     cin >> b;
-
 
     cout << "Введите желаемую точность (например, 0.000001): ";
     cin >> EPS;
@@ -179,13 +194,17 @@ int main() {
         case 5:
             print_result(combined(a, b));
             break;
-        case 6: {
+        case 6:
+            print_result(simpleIteration((a + b) / 2));
+            break;
+        case 7: {
             vector<Result> results = {
                 division(a, b),
                 chord(a, b),
                 newton((a + b) / 2),
                 secant(a, b),
-                combined(a, b)
+                combined(a, b),
+                simpleIteration((a + b) / 2)
             };
 
             sort(results.begin(), results.end(),
